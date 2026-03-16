@@ -1,3 +1,5 @@
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config(); // Loads our hidden .env variables
 const express = require('express');
 const cors = require('cors');
@@ -41,17 +43,26 @@ const participantSchema = new mongoose.Schema({
 const Participant = mongoose.model('Participant', participantSchema);
 
 // ==========================================
-// 3. FILE UPLOAD CONFIGURATION
+// 3. FILE UPLOAD CONFIGURATION (CLOUDINARY)
 // ==========================================
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Configure Cloudinary with your credentials
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+    
 });
+
+// Set up Multer to use Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'event_receipts', // The folder name created in your Cloudinary account
+        allowedFormats: ['jpeg', 'png', 'jpg', 'pdf']
+    }
+});
+
 const upload = multer({ storage: storage });
 
 // ==========================================
